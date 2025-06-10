@@ -1,4 +1,4 @@
-from .schemas import ContactBase, ContactResponse, ContactUpdate
+from .contact_schema import ContactBase, ContactResponse, ContactUpdate
 
 __all__ = [
     "ContactBase",
