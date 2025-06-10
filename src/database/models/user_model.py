@@ -16,10 +16,12 @@ class User(IDOrmModel):
 
     # User credential
     username: Mapped[str] = mapped_column(
-        String(), nullable=False, unique=True, index=True
+        String(50), nullable=False, unique=True, index=True
     )
-    email: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
-    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # User profile info
     avatar_url: Mapped[str | None] = mapped_column(String(255))
