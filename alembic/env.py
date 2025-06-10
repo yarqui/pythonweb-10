@@ -11,7 +11,7 @@ from alembic import context
 
 # This line makes the 'src' directory (one level up from this migrations/ directory) importable
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
-from src.database import metadata_obj
+from src.database.models import metadata_obj
 from src.conf.config import config as app_config
 
 # this is the Alembic Config object, which provides
