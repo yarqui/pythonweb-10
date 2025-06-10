@@ -12,7 +12,7 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 git clone https://github.com/yarqui/pythonweb-08.git
-cd pythonweb-08
+cd pythonweb-10
 ```
 
 ### 2. Set Up Python Environment
