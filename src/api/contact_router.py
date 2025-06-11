@@ -48,30 +48,33 @@ async def get_contact_by_id(
     return contact
 
 
-@contact_router.post(
-    "/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED
-)
-async def create_contact(
-    body: ContactBase,
-    contact_service: ContactService = Depends(get_contact_service),
-):
-    try:
-        new_contact = await contact_service.create_contact(body)
-        return new_contact
+# TODO: rewrite this router once auth part is implemented and user repo and service are too
+# @contact_router.post(
+#     "/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED
+# )
+# async def create_contact(
+#     body: ContactBase,
+#     current_user = '"TODO:" Add the current user as a dependency'
+#     # current_user: User = Depends(get_current_user),
+#     contact_service: ContactService = Depends(get_contact_service),
+# ):
+#     try:
+#         new_contact = await contact_service.create_contact(body, current_user)
+#         return new_contact
 
-    # Unique constraint violation
-    except IntegrityError as e:
-        if isinstance(e.orig, UniqueViolationError):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Contact with email '{body.email}' already exists.",
-            ) from e
+#     # Unique constraint violation
+#     except IntegrityError as e:
+#         if isinstance(e.orig, UniqueViolationError):
+#             raise HTTPException(
+#                 status_code=status.HTTP_409_CONFLICT,
+#                 detail=f"Contact with email '{body.email}' already exists.",
+#             ) from e
 
-        # Other unexpected database errors
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected database error occurred.",
-        ) from e
+#         # Other unexpected database errors
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail="An unexpected database error occurred.",
+#         ) from e
 
 
 @contact_router.patch("/{contact_id}", response_model=ContactResponse)
