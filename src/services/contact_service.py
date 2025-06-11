@@ -1,17 +1,20 @@
-from typing import List
+from typing import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository import ContactRepository
 from src.schemas import ContactBase, ContactUpdate
-from src.database.models import Contact
+from src.database.models import Contact, User
+
+__all__ = ["ContactService"]
 
 
 class ContactService:
     def __init__(self, db: AsyncSession):
-        self._contact_repository = ContactRepository(db)
+        self._contact_repository = ContactRepository(session=db)
 
-    async def create_contact(self, body: ContactBase) -> Contact:
-        new_contact = await self._contact_repository.create_contact(body)
+    async def create_contact(self, body: ContactBase, user: User) -> Contact:
+        contact_data = body.model_dump()
+        new_contact = await self._contact_repository.create_contact(contact_data, user)
         return new_contact
 
     async def search_contacts(
@@ -21,7 +24,7 @@ class ContactService:
         first_name: str | None,
         last_name: str | None,
         email: str | None,
-    ) -> List[Contact]:
+    ) -> Sequence[Contact]:
         contacts = await self._contact_repository.search_contacts(
             skip, limit, first_name, last_name, email
         )
@@ -43,6 +46,6 @@ class ContactService:
         deleted_contact = await self._contact_repository.delete_contact(contact_id)
         return deleted_contact
 
-    async def get_upcoming_birthdays(self) -> List[Contact]:
+    async def get_upcoming_birthdays(self) -> Sequence[Contact]:
         contacts = await self._contact_repository.get_upcoming_birthdays()
         return contacts
