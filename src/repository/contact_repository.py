@@ -1,23 +1,22 @@
 import datetime
-from typing import List
+from typing import Sequence
 
 
 from sqlalchemy import select, extract, or_, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Contact
-from src.schemas import ContactBase, ContactUpdate
+from src.database.models import Contact, User
+from src.schemas import ContactUpdate
+
+__all__ = ["ContactRepository"]
 
 
 class ContactRepository:
     def __init__(self, session: AsyncSession):
         self.db = session
 
-    async def create_contact(
-        self,
-        body: ContactBase,
-    ) -> Contact:
-        contact = Contact(**body.model_dump())
+    async def create_contact(self, contact_data: dict, user: User) -> Contact:
+        contact = Contact(**contact_data, user=user)
         self.db.add(contact)
         await self.db.commit()
         await self.db.refresh(contact)
@@ -30,7 +29,7 @@ class ContactRepository:
         first_name: str | None,
         last_name: str | None,
         email: str | None,
-    ) -> List[Contact]:
+    ) -> Sequence[Contact]:
 
         stmt = select(Contact)
         filters = []
@@ -77,7 +76,7 @@ class ContactRepository:
             await self.db.commit()
         return contact
 
-    async def get_upcoming_birthdays(self) -> List[Contact]:
+    async def get_upcoming_birthdays(self) -> Sequence[Contact]:
         today = datetime.date.today()
 
         target_dates = [today + datetime.timedelta(days=i) for i in range(7)]
