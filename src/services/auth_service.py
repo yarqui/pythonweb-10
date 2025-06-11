@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from typing import Optional
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.conf.config import config
+from src.database.db import get_db
+from src.repository import UserRepository
+
+
+class AuthService:
+    # Password Hashing Setup
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    # OAuth2 Scheme Setup
+    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        return self.pwd_context.verify(plain_password, hashed_password)
+
+    def hash_password(self, password: str) -> str:
+        return self.pwd_context.hash(password)
+
+    async def create_access_token(
+        self, data: dict, expires_delta: Optional[timedelta] = None
+    ) -> str:
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.now(timezone.utc) + expires_delta
+        else:
+            expire = datetime.now(timezone.utc) + timedelta(
+                minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES
+            )
+
+        to_encode.update(
+            {
+                "exp": expire,
+                "iat": datetime.now(timezone.utc),
+                "scope": "access_token",  # Scope to identify this as an access token
+            }
+        )
+        encoded_jwt = jwt.encode(
+            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM
+        )
+        return encoded_jwt
+
+    async def create_refresh_token(self, data: dict) -> str:
+        to_encode = data.copy()
+        expire = datetime.now(timezone.utc) + timedelta(
+            days=config.REFRESH_TOKEN_EXPIRE_DAYS
+        )
+        to_encode.update(
+            {
+                "exp": expire,
+                "iat": datetime.now(timezone.utc),
+                "scope": "refresh_token",  # Scope for refresh token
+            }
+        )
+        encoded_jwt = jwt.encode(
+            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM
+        )
+        return encoded_jwt
+
+    async def decode_refresh_token(self, refresh_token: str) -> str:
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
+        try:
+            payload = jwt.decode(
+                refresh_token,
+                config.JWT_SECRET_KEY,
+                algorithms=[config.JWT_ALGORITHM],
+            )
+            if payload.get("scope") == "refresh_token":
+                email = payload.get("sub")
+
+                if email is None:
+                    raise credentials_exception
+                return email
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid scope for token",
+            )
+        except JWTError as e:
+            raise credentials_exception from e
+
+
+async def get_current_user(
+    token: str = Depends(AuthService.oauth2_scheme), db: AsyncSession = Depends(get_db)
+):
+    """Dependency to get the current authenticated user from a token."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(
+            token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM]
+        )
+        if payload.get("scope") != "access_token":
+            raise credentials_exception
+
+        email = payload.get("sub")
+
+        if email is None:
+            raise credentials_exception
+    except JWTError as e:
+        raise credentials_exception from e
+
+    user_repo = UserRepository(db)
+    user = await user_repo.get_user_by_email(email)
+    if user is None:
+        raise credentials_exception
+    return user
