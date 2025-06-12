@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -91,6 +91,32 @@ class AuthService:
             )
         except JWTError as e:
             raise credentials_exception from e
+
+    async def login_user(
+        self, body: OAuth2PasswordRequestForm, db: AsyncSession
+    ) -> dict:
+        """
+        Handles the core logic of user authentication.
+        """
+        user_repo = UserRepository(db)
+        user = await user_repo.get_user_by_email(body.username)
+
+        if user is None or not self.verify_password(
+            body.password, user.hashed_password
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+            )
+
+        access_token = await self.create_access_token(data={"sub": user.email})
+        refresh_token = await self.create_refresh_token(data={"sub": user.email})
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }
 
 
 async def get_current_user(
