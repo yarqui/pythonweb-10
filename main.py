@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 
-from src.api import contact_router, util_router
+from src.api import contact_router, health_router, auth_router, user_router
 
 app = FastAPI()
 
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(contact_router, prefix="/api/v1")
-app.include_router(util_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
+app.include_router(health_router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

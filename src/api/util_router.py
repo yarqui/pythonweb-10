@@ -3,25 +3,32 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.db import get_db
 
+health_router = APIRouter(prefix="/utils", tags=["utils"])
 
-util_router = APIRouter(tags=["utils"])
 
-
-@util_router.get("/")
+@health_router.get(
+    "/healthchecker",
+    summary="Health Check",
+    description="Check if the application and database connection are active.",
+)
 async def health_checker(db: AsyncSession = Depends(get_db)):
+    """
+    Performs a health check on the application and its database connection.
+    """
     try:
         result = await db.execute(text("SELECT 1"))
-        result = result.scalar_one_or_none()
 
-        if result is None:
+        if result.scalar_one() != 1:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Database is not configured correctly",
             )
-        return {"message": "Welcome to FastAPI!"}
+
+        return {"message": "Application and database connection are healthy"}
+
     except Exception as e:
-        print(e)
+        print(f"Health check failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Error connecting to the database",
         ) from e

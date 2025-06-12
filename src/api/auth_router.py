@@ -7,10 +7,10 @@ from src.schemas import UserCreate, UserResponse, TokenResponse
 from src.services import get_user_service, UserService, AuthService
 from src.services import get_auth_service
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+auth_router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
-@router.post(
+@auth_router.post(
     "/signup",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
@@ -27,7 +27,7 @@ async def signup(
     return new_user
 
 
-@router.post("/login", response_model=TokenResponse, summary="User Login")
+@auth_router.post("/login", response_model=TokenResponse, summary="User Login")
 async def login(
     body: OAuth2PasswordRequestForm = Depends(),
     auth_service: AuthService = Depends(get_auth_service),
