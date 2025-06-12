@@ -13,6 +13,8 @@ from src.conf.config import config
 from src.database.db import get_db
 from src.repository import UserRepository
 
+__all__ = ["AuthService", "get_current_user"]
+
 
 class AuthService:
     # Password Hashing Setup
