@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from asyncpg.exceptions import UniqueViolationError
+
 from libgravatar import Gravatar
 
 from src.repository import UserRepository
@@ -17,6 +21,12 @@ class UserService:
         self._auth_service = AuthService()
 
     async def create_user(self, body: UserCreate) -> User:
+        existing_user = await self._repository.get_user_by_email(body.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="User with this email already exists.",
+            )
         hashed_password = self._auth_service.hash_password(body.password)
 
         avatar_url = None
@@ -26,7 +36,16 @@ class UserService:
         except Exception as e:
             print(f"Gravatar error: {e}")
 
-        return await self._repository.create_user(body, hashed_password, avatar_url)
+        try:
+            return await self._repository.create_user(body, hashed_password, avatar_url)
+        except IntegrityError as e:
+            # Needed for race condition
+            if isinstance(e.orig, UniqueViolationError):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="User with this email already exists (race condition).",
+                ) from e
+            raise
 
     async def get_user_by_id(self, user_id: int) -> User | None:
         user = await self._repository.get_user_by_id(user_id)

@@ -1,5 +1,13 @@
 from .contact_service import ContactService
+from .user_service import UserService
 from .auth_service import AuthService
-from .dependencies import get_contact_service, get_user_service
+from .dependencies import get_contact_service, get_user_service, get_auth_service
 
-__all__ = ["ContactService", "get_contact_service", "AuthService", "get_user_service"]
+__all__ = [
+    "ContactService",
+    "get_contact_service",
+    "AuthService",
+    "UserService",
+    "get_user_service",
+    "get_auth_service",
+]
