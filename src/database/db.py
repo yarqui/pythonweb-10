@@ -16,7 +16,7 @@ class DatabaseSessionManager:
     @contextlib.asynccontextmanager
     async def session(self):
         if self._session_maker is None:
-            raise Exception("Database session is not initialized")
+            raise ValueError("Database session manager is not initialized")
         session = self._session_maker()
         try:
             yield session
