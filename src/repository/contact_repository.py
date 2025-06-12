@@ -4,7 +4,7 @@ import datetime
 from typing import Sequence
 
 
-from sqlalchemy import select, extract, or_, and_, tuple_
+from sqlalchemy import select, extract, and_, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Contact, User

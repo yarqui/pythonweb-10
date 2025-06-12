@@ -3,10 +3,9 @@ from typing import Sequence
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from asyncpg.exceptions import UniqueViolationError
 
-
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository import ContactRepository
 from src.schemas import ContactBase, ContactUpdate

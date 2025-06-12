@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -11,6 +12,8 @@ from src.repository import UserRepository
 from src.services import AuthService
 from src.schemas import UserCreate
 from src.database.models import User
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["UserService"]
 
@@ -34,7 +37,7 @@ class UserService:
             g = Gravatar(body.email)
             avatar_url = g.get_image()
         except Exception as e:
-            print(f"Gravatar error: {e}")
+            logger.warning("Could not retrieve Gravatar for %s: %s", body.email, e)
 
         try:
             return await self._repository.create_user(body, hashed_password, avatar_url)
