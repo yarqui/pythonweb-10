@@ -101,7 +101,11 @@ class AuthService:
         Handles the core logic of user authentication.
         """
         user_repo = UserRepository(db)
-        user = await user_repo.get_user_by_email(body.username)
+
+        if "@" in body.username:
+            user = await user_repo.get_user_by_email(body.username)
+        else:
+            user = await user_repo.get_user_by_username(body.username)
 
         if user is None or not self.verify_password(
             body.password, user.hashed_password
