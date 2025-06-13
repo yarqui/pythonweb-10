@@ -8,8 +8,8 @@ from asyncpg.exceptions import UniqueViolationError
 
 from libgravatar import Gravatar
 
+from src.services.auth_service import AuthService
 from src.repository import UserRepository
-from src.services import AuthService
 from src.schemas import UserCreate
 from src.database.models import User
 
