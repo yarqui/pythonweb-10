@@ -30,13 +30,13 @@ class User(IDOrmModel):
     created_at: Mapped[datetime] = mapped_column(
         "created_at",
         DateTime(timezone=True),
-        server_default=func.now(),
+        default=func.now(),
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         "updated_at",
         DateTime(timezone=True),
-        server_default=func.now(),
+        default=func.now(),
         onupdate=func.now(),
         nullable=False,
     )
