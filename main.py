@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from slowapi.errors import RateLimitExceeded
@@ -6,8 +7,18 @@ from slowapi.errors import RateLimitExceeded
 from src.services import limiter
 from src.api import contact_router, health_router, auth_router, user_router
 
+origins = ["http://localhost:3000"]
+
+
 app = FastAPI()
 app.state.limiter = limiter
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.exception_handler(RateLimitExceeded)
