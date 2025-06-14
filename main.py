@@ -1,3 +1,6 @@
+from ipaddress import ip_address
+from typing import Callable
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -8,7 +11,10 @@ from src.services import limiter
 from src.api import contact_router, health_router, auth_router, user_router
 
 origins = ["http://localhost:3000"]
-
+banned_ips = [
+    ip_address("91.218.114.206"),
+    ip_address("46.17.46.213"),
+]
 
 app = FastAPI()
 app.state.limiter = limiter
@@ -19,6 +25,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def ban_ips_middleware(request: Request, call_next: Callable):
+    if request.client and request.client.host:
+        try:
+            ip = ip_address(request.client.host)
+            if ip in banned_ips:
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={"detail": "You are banned from accessing this resource."},
+                )
+        except ValueError:
+            pass
+    response = await call_next(request)
+    return response
 
 
 @app.exception_handler(RateLimitExceeded)
