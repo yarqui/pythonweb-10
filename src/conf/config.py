@@ -1,3 +1,4 @@
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,10 +17,13 @@ class Settings(BaseSettings):
 
     # JWT Settings with Defaults
     JWT_SECRET_KEY: str = "insecure_default_secret_for_testing"
-
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # CORS and IP Ban Settings
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000"]
+    BANNED_IPS: List[str] = ["91.218.114.206", "46.17.46.213"]
 
     # Override the above default settings if .env is found
     model_config = SettingsConfigDict(
