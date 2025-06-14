@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -126,7 +126,9 @@ class AuthService:
 
 
 async def get_current_user(
-    token: str = Depends(AuthService.oauth2_scheme), db: AsyncSession = Depends(get_db)
+    request: Request,
+    token: str = Depends(AuthService.oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
 ):
     """Dependency to get the current authenticated user from a token."""
     credentials_exception = HTTPException(
@@ -151,6 +153,9 @@ async def get_current_user(
 
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
+
     if user is None:
         raise credentials_exception
+
+    request.state.user = user
     return user
