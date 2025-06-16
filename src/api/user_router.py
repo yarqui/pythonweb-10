@@ -10,7 +10,9 @@ user_router = APIRouter(prefix="/users", tags=["users"])
 
 
 @user_router.get(
-    "/me", response_model=UserResponse, summary="Get Current User's Profile"
+    "/me",
+    response_model=UserResponse,
+    summary="Get Current User's Profile",
 )
 @limiter.limit("5/minute")
 async def get_own_profile(

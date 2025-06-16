@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status, Request
@@ -94,6 +94,42 @@ class AuthService:
         except JWTError as e:
             raise credentials_exception from e
 
+    def create_email_token(self, data: dict) -> str:
+        to_encode = data.copy()
+        expire = datetime.now(timezone.utc) + timedelta(hours=48)
+        to_encode.update({"exp": expire, "scope": "email_verification"})
+        token = jwt.encode(
+            to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+        )
+        return token
+
+    async def decode_email_token(self, token: str) -> str:
+        """Decodes the email verification token to get the user's email."""
+        try:
+            payload = jwt.decode(
+                token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+            )
+            if payload.get("scope") == "email_verification":
+                email = payload.get("sub")
+
+                if email is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid token for email verification",
+                    )
+
+                return email
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid scope for token",
+            )
+        except JWTError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid token for email verification",
+            ) from e
+
     async def login_user(
         self, body: OAuth2PasswordRequestForm, db: AsyncSession
     ) -> dict:
@@ -113,6 +149,11 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
+            )
+
+        if not user.verified:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not verified"
             )
 
         access_token = await self.create_access_token(data={"sub": user.email})
@@ -159,3 +200,13 @@ async def get_current_user(
 
     request.state.user = user
     return user
+
+
+def create_email_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now(UTC) + timedelta(days=7)
+    to_encode.update({"iat": datetime.now(UTC), "exp": expire})
+    token = jwt.encode(
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
+    return token

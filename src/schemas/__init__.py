@@ -1,5 +1,5 @@
 from .contact_schema import ContactBase, ContactResponse, ContactUpdate
-from .user_schema import UserBase, UserCreate, UserResponse
+from .user_schema import UserBase, UserCreate, UserResponse, RequestEmail
 from .token_schema import TokenResponse
 
 __all__ = [
@@ -9,5 +9,6 @@ __all__ = [
     "UserBase",
     "UserCreate",
     "UserResponse",
+    "RequestEmail",
     "TokenResponse",
 ]
