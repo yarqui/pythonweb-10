@@ -1,6 +1,7 @@
 from ipaddress import ip_address
 from typing import Callable
 
+import cloudinary
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -10,6 +11,13 @@ from slowapi.errors import RateLimitExceeded
 from src.services import limiter
 from src.api import contact_router, health_router, auth_router, user_router
 from src.conf.config import settings
+
+cloudinary.config(
+    cloud_name=settings.CLOUDINARY_API_NAME,
+    api_key=settings.CLOUDINARY_API_KEY,
+    api_secret=settings.CLOUDINARY_API_SECRET,
+    secure=True,
+)
 
 origins = settings.ALLOWED_ORIGINS
 banned_ips = settings.BANNED_IPS

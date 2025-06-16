@@ -53,3 +53,11 @@ class UserRepository:
         if user:
             user.verified = True
             await self.db.commit()
+
+    async def update_avatar_url(self, email: str, url: str) -> User | None:
+        user = await self.get_user_by_email(email)
+        if user:
+            user.avatar_url = url
+            await self.db.commit()
+            await self.db.refresh(user)
+            return user

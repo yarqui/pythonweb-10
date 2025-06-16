@@ -77,3 +77,6 @@ class UserService:
     async def get_user_by_email(self, email: str) -> User | None:
         user = await self._repository.get_user_by_email(email)
         return user
+
+    async def update_avatar_url(self, email: str, url: str):
+        return await self._repository.update_avatar_url(email, url)
