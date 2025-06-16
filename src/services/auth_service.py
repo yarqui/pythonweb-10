@@ -9,7 +9,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.conf.config import config
+from src.conf.config import settings
 from src.database.db import get_db
 from src.repository import UserRepository
 
@@ -37,7 +37,7 @@ class AuthService:
             expire = datetime.now(timezone.utc) + expires_delta
         else:
             expire = datetime.now(timezone.utc) + timedelta(
-                minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES
+                minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
             )
 
         to_encode.update(
@@ -48,14 +48,14 @@ class AuthService:
             }
         )
         encoded_jwt = jwt.encode(
-            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM
+            to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
         )
         return encoded_jwt
 
     async def create_refresh_token(self, data: dict) -> str:
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(
-            days=config.REFRESH_TOKEN_EXPIRE_DAYS
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
         )
         to_encode.update(
             {
@@ -65,7 +65,7 @@ class AuthService:
             }
         )
         encoded_jwt = jwt.encode(
-            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM
+            to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
         )
         return encoded_jwt
 
@@ -77,8 +77,8 @@ class AuthService:
         try:
             payload = jwt.decode(
                 refresh_token,
-                config.JWT_SECRET_KEY,
-                algorithms=[config.JWT_ALGORITHM],
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM],
             )
             if payload.get("scope") == "refresh_token":
                 email = payload.get("sub")
@@ -139,7 +139,7 @@ async def get_current_user(
 
     try:
         payload = jwt.decode(
-            token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM]
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
         if payload.get("scope") != "access_token":
             raise credentials_exception

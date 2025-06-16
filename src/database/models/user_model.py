@@ -25,6 +25,7 @@ class User(IDOrmModel):
 
     # User profile info
     avatar_url: Mapped[str | None] = mapped_column(String(255))
+    verified: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     #  Timestamps
     created_at: Mapped[datetime] = mapped_column(

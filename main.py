@@ -9,10 +9,10 @@ from slowapi.errors import RateLimitExceeded
 
 from src.services import limiter
 from src.api import contact_router, health_router, auth_router, user_router
-from src.conf.config import config
+from src.conf.config import settings
 
-origins = config.ALLOWED_ORIGINS
-banned_ips = config.BANNED_IPS
+origins = settings.ALLOWED_ORIGINS
+banned_ips = settings.BANNED_IPS
 
 app = FastAPI()
 app.state.limiter = limiter
